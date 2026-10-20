@@ -175,6 +175,9 @@ protected:
 	TECSControl::Flag  _flag{.airspeed_enabled = true, .detect_underspeed_enabled = true};
 	TECSAltitudeReferenceModel _alt_ref_model{};
 
+	float _target_climbrate{paramDefault(px4::params::FW_T_CLMB_R_SP)};
+	float _target_sinkrate {paramDefault(px4::params::FW_T_SINK_R_SP)};
+
 	float _V_sp         {_params.equivalent_airspeed_trim};
 	float _alt_sp       {ALT_INIT};
 	float _pitch_prev   {0.f};        // pitch command from previous step, for altitude_rate input
@@ -246,9 +249,11 @@ protected:
 
 	void updateAltRef()
 	{
+		// Mapped the way FwLateralLongitudinalControl feeds the reference model: the target rates come from
+		// FW_T_CLMB_R_SP / FW_T_SINK_R_SP, bounded by the performance limits
 		const TECSAltitudeReferenceModel::Param param{
-			.target_climbrate = _params.max_climb_rate,
-			.target_sinkrate  = _params.max_sink_rate,
+			.target_climbrate = math::min(_target_climbrate, _params.max_climb_rate),
+			.target_sinkrate  = math::min(_target_sinkrate, _params.max_sink_rate),
 			.vert_accel_limit = _params.vert_accel_limit,
 			.max_climb_rate   = _params.max_climb_rate,
 			.max_sink_rate    = _params.max_sink_rate,
