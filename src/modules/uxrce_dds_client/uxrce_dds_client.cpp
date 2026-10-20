@@ -243,6 +243,16 @@ bool UxrceddsClient::setupSession(uxrSession *session)
 
 	uxr_init_session(session, _comm, key);
 
+	// Attach to the agent to the previous session or create a new one
+	if (!uxr_create_session(session)) {
+		PX4_ERR("uxr_create_session failed");
+		return false;
+	}
+
+	// Delete it, dropping stale entities
+	uxr_delete_session(session);
+
+	// Start again from a clean session
 	if (!uxr_create_session(session)) {
 		PX4_ERR("uxr_create_session failed");
 		return false;
